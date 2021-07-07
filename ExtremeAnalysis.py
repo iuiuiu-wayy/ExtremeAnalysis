@@ -173,6 +173,7 @@ class SpatialOperations():
         self.polynomParamsDir = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/PolynomParams2'
         self.correctedDataDir = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/correctedData2'
         self.QCDir = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/QCData'
+        self.SHPDir = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/SHPs'
 
         self.paramToGCMParamDict = {
             'CDD' : 'cddETCCDI',
