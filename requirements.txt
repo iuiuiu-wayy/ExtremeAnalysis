@@ -2,6 +2,7 @@ geopandas
 wget
 parallel_sync
 rioxarray
+matplotlib
 xarray
 pandas
 numpy
