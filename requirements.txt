@@ -1,0 +1,8 @@
+geopandas
+wget
+parallel_sync
+rioxarray
+xarray
+pandas
+numpy
+scipy
