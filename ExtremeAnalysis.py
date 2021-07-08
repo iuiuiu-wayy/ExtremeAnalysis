@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from datetime import date
+from datetime import date, time
 import os
 import xarray
 import cftime as cft
@@ -994,5 +994,30 @@ class SpatialOperations():
             data_params = dataset[varname]
 
         return data_params
+
+    
+    def calculate_trends(self, data_x, var='time'):
+
+        def inner_calculate_trend(S):
+        # print(S.shape)
+            S_no_nan = S[~np.isnan(S)]
+            N = len(S)
+            N2 = len(S_no_nan)
+            if ((N2/N) < 0.3):
+                return np.array([np.nan])
+            
+            x = np.array(range(len(S)))
+            a, b = np.polyfit(x, S, 1)
+            return a
+
+        trends = xarray.apply_ufunc(
+            inner_calculate_trend,
+            data_x,#.isel(x=20,y=20),
+            input_core_dims=[[var]],
+            # output_core_dims=[['param']],
+            exclude_dims=set((var,)),
+            vectorize=True,
+        )
+        return trends
 
 
