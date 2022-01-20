@@ -275,7 +275,7 @@ class SpatialOperations():
             era5_5km_2020 = era5.interp(y=ref2.latitude, x=ref2.longitude, method='linear')
 
             # fill up the 2020 data
-            merged_2020 = xarray.merge([era5_5km_2020['total_precipitation'][:,:,:], era5_5km_2016['total_precipitation'][191,:,:] ])
+            merged_2020 = xarray.merge([era5_5km_2020['total_precipitation'][:,:,:], era5_5km_2016['total_precipitation'][191:,:,:] ])
             merged_2020['time'] = np.arange('2020-01', '2021-01', dtype='datetime64[D]')
 
             ### combine all era5 data
