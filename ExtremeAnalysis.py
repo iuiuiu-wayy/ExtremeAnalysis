@@ -268,11 +268,11 @@ class SpatialOperations():
 
             #### grep era5 2016 data
             era5 = xarray.open_dataset(os.path.join(self.era5data, 'era5_2016.nc'))
-            era5_5km_2016 = era5.interp(y=ref2.latitude, x=ref.longitude, method='linear')
+            era5_5km_2016 = era5.interp(y=ref2.latitude, x=ref2.longitude, method='linear')
             
             ### grep era5 2020 data
             era5 = xarray.open_dataset(os.path.join(self.era5data, 'era5_2020.nc'))
-            era5_5km_2020 = era5.interp(y=ref2.latitude, x=ref.longitude, method='linear')
+            era5_5km_2020 = era5.interp(y=ref2.latitude, x=ref2.longitude, method='linear')
 
             # fill up the 2020 data
             merged_2020 = xarray.merge([era5_5km_2020['total_precipitation'][:,:,:], era5_5km_2016['total_precipitation'][191,:,:] ])
@@ -283,7 +283,7 @@ class SpatialOperations():
             for year in range(1991, 2020):
                 with xarray.open_dataset(os.path.join(self.era5data, 'era5_{}.nc'.format(year))) as era5:
                     era5_prec = era5['total_precipitation']  
-                era5_5km = era5_prec.interp(y=ref2.latitude, x=ref.longitude, method='linear')
+                era5_5km = era5_prec.interp(y=ref2.latitude, x=ref2.longitude, method='linear')
                 dss.append(era5_5km)
             dss.append(merged_2020)
             merged_era5 = xarray.merge(dss)
@@ -302,6 +302,7 @@ class SpatialOperations():
             filled_chirps = xarray.where(merged_noregrid.isnull(), merged_era5, merged_noregrid )
             for index_f in ECIO.functionList:
                 eci = filled_chirps.groupby('time.year').map(self.mapoverlatlon, funct=index_f)
+                eci_1km = eci.interp(latitude=ref.y, longitude=ref.x, method='linear')
                 nc_filename = city+'_'+index_f.__name__ + '.nc'
                 eci.to_netcdf(nc_filename)
                 copyfile(nc_filename, os.path.join(self.CityETCCDIEra5, nc_filename))
