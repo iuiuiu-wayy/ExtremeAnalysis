@@ -286,6 +286,9 @@ class SpatialOperations():
                 era5_5km = era5_prec.interp(y=ref2.latitude, x=ref2.longitude, method='linear')
                 dss.append(era5_5km)
             dss.append(merged_2020)
+            print(dss)
+            print(era5_5km)
+            print(merged_2020)
             merged_era5 = xarray.merge(dss)
 
             dss = []
