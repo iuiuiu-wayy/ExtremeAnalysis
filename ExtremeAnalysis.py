@@ -160,10 +160,12 @@ class SpatialOperations():
             'Cirebon': [-6.68, -6.8, 108.51, 108.59],
             'Kupang': [-10.12, -10.22, 123.54, 123.68]
         }
+        self.era5data = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/ERA5'
         self.GEVparamDir = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/GEVparams'
         self.DATADIR = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/chirps/'
         self.MOVE2GDRIVE = True
         self.GDRIVELOC = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/CityECI2'
+        self.CityETCCDIEra5 = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/ETCCDIEra5'
         self.GCMDIRS = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/GCM'
         self.ReferenceFile = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/wc2.1_30s_prec_01.tif'
         self.DATAFROMDRIVE = False
@@ -250,16 +252,69 @@ class SpatialOperations():
                 eci.to_netcdf(nc_filename)
                 copyfile(nc_filename, os.path.join(self.GDRIVELOC, nc_filename))
 
-    def run_selectedf_obs(self, FunList):
-        for city in self.cities.keys():
+    def calculateECIndexEra5(self, ECIO):
+        for city in self.cities:
             ref = self.getGridReference(city)
-            merged = self.getMergedCropRegridedData(city)
+            max_lat, min_lat, min_lon, max_lon = self.cities[city]
+            max_lat = max_lat + 0.2
+            max_lon = max_lon + 0.2
+            min_lat = min_lat - 0.2
+            min_lon = min_lon - 0.2
+            with xarray.open_dataset(os.path.join(self.DATADIR, 'chirps-v2.0.'+str(1991)+'.days_p05.nc')) as dataset:
+                prec = dataset['precip']
+            mask_lon = (prec.longitude >= min_lon) & (prec.longitude <= max_lon)
+            mask_lat = (prec.latitude >= min_lat) & (prec.latitude <= max_lat)
+            ref2 = prec.where(mask_lon & mask_lat, drop=True)
 
-            for index_f in FunList:
-                eci = merged.groupby('time.year').map(self.mapoverlatlon, funct=Fun)
+            #### grep era5 2016 data
+            era5 = xarray.open_dataset(os.path.join(self.era5data, 'era5_2016.nc'))
+            era5_5km_2016 = era5.interp(y=ref2.latitude, x=ref.longitude, method='linear')
+            
+            ### grep era5 2020 data
+            era5 = xarray.open_dataset(os.path.join(self.era5data, 'era5_2020.nc'))
+            era5_5km_2020 = era5.interp(y=ref2.latitude, x=ref.longitude, method='linear')
+
+            # fill up the 2020 data
+            merged_2020 = xarray.merge([era5_5km_2020['total_precipitation'][:,:,:], era5_5km_2016['total_precipitation'][191,:,:] ])
+            merged_2020['time'] = np.arange('2020-01', '2021-01', dtype='datetime64[D]')
+
+            ### combine all era5 data
+            dss = []
+            for year in range(1991, 2020):
+                with xarray.open_dataset(os.path.join(self.era5data, 'era5_{}.nc'.format(year))) as era5:
+                    era5_prec = era5['total_precipitation']  
+                era5_5km = era5_prec.interp(y=ref2.latitude, x=ref.longitude, method='linear')
+                dss.append(era5_5km)
+            dss.append(merged_2020)
+            merged_era5 = xarray.merge(dss)
+
+            dss = []
+            for i in range(1991,2021,1):
+                print(i)
+                with xarray.open_dataset(os.path.join(self.DATADIR, 'chirps-v2.0.'+str(i)+'.days_p05.nc')) as dataset:
+                    prec = dataset['precip']
+                mask_lon = (prec.longitude >= min_lon) & (prec.longitude <= max_lon)
+                mask_lat = (prec.latitude >= min_lat) & (prec.latitude <= max_lat)
+                cropped_ds = prec.where(mask_lon & mask_lat, drop=True)
+                dss.append(cropped_ds)
+            merged_noregrid = xarray.merge(dss)
+
+            filled_chirps = xarray.where(merged_noregrid.isnull(), merged_era5, merged_noregrid )
+            for index_f in ECIO.functionList:
+                eci = filled_chirps.groupby('time.year').map(self.mapoverlatlon, funct=index_f)
                 nc_filename = city+'_'+index_f.__name__ + '.nc'
                 eci.to_netcdf(nc_filename)
-                copyfile(nc_filename, os.path.join(self.GDRIVELOC, nc_filename))
+                copyfile(nc_filename, os.path.join(self.CityETCCDIEra5, nc_filename))
+    # def run_selectedf_obs(self, FunList):
+    #     for city in self.cities.keys():
+    #         ref = self.getGridReference(city)
+    #         merged = self.getMergedCropRegridedData(city)
+
+    #         for index_f in FunList:
+    #             eci = merged.groupby('time.year').map(self.mapoverlatlon, funct=Fun)
+    #             nc_filename = city+'_'+index_f.__name__ + '.nc'
+    #             eci.to_netcdf(nc_filename)
+    #             copyfile(nc_filename, os.path.join(self.GDRIVELOC, nc_filename))
 
     def calculateGEVParam(S):
         params = gev.fit(S)
@@ -312,62 +367,6 @@ class SpatialOperations():
 
         last_index = len(future['time'])
         future_crop = future.isel(time=slice(1,16))
-
-        # print(hist.time)
-        # print(future.time)
-
-        # newtime = []
-        # for fut_t in future.time.values:
-        #     try:
-        #         year = fut_t.year
-        #     except:
-        #         year = int(str(fut_t).split('-')[0])
-        #     newtime.append(datetime(year, 1, 1))
-        # future['time'] = newtime
-
-        # newtime = []
-        # # hist['time'] = pd.to_datetime(hist_crop.time.values)
-        # for hist_t in hist.time.values:
-        #     try:
-        #         year = hist_t.year
-        #     except:
-        #         year = int(str(hist_t).split('-')[0])
-        #     newtime.append(datetime( year , 1,1))
-        # hist['time'] = newtime
-
-        
-        
-        # try:
-        #     hist_crop = hist.sel(time = slice(np.datetime64('1991-01-02'), 
-        #                                       np.datetime64('2005-12-02')))
-        # except:
-        #     hist_crop = future.sel(time=slice( cft.DatetimeGregorian(1991, 1,2),
-        #                                       cft.DatetimeGregorian(2005,12,2)))
-
-        # try:
-        #     future_crop = future.sel(time=slice(cft.DatetimeGregorian(2006,1,2), 
-        #                                         cft.DatetimeGregorian(2020,12,1)))
-        # except:
-        #     future_crop = future.sel(time=slice(np.datetime64('2006-01-02'), 
-        #                                         np.datetime64('2020-12-02')))
-        # newtime = []
-        # for fut_t in future_crop.time.values:
-        #     try:
-        #         year = fut_t.year
-        #     except:
-        #         year = int(str(fut_t).split('-')[0])
-        #     newtime.append(datetime(year, 1, 1))
-        # future_crop['time'] = newtime
-
-        # newtime = []
-        # hist_crop['time'] = pd.to_datetime(hist_crop.time.values)
-        # for hist_t in hist_crop.time.values:
-        #     try:
-        #         year = hist_t.year
-        #     except:
-        #         year = int(str(hist_t).split('-')[0])
-        #     newtime.append(datetime( year , 1,1))
-        # hist_crop['time'] = newtime
 
         baseline_model = xarray.concat([hist_crop, future_crop], dim='time')
 
