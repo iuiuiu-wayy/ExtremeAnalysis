@@ -298,7 +298,8 @@ class SpatialOperations():
                 cropped_ds = prec.where(mask_lon & mask_lat, drop=True)
                 dss.append(cropped_ds)
             merged_noregrid = xarray.merge(dss)
-
+            print(merged_noregrid)
+            print(merged_era5)
             filled_chirps = xarray.where(merged_noregrid.isnull(), merged_era5, merged_noregrid )
             for index_f in ECIO.functionList:
                 eci = filled_chirps.groupby('time.year').map(self.mapoverlatlon, funct=index_f)
