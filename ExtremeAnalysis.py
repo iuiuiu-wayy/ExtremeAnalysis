@@ -254,6 +254,7 @@ class SpatialOperations():
 
     def calculateECIndexEra5(self, ECIO):
         for city in self.cities:
+            print('processing for city of {}'.format(city))
             ref = self.getGridReference(city)
             max_lat, min_lat, min_lon, max_lon = self.cities[city]
             max_lat = max_lat + 0.2
@@ -286,10 +287,11 @@ class SpatialOperations():
                 era5_5km = era5_prec.interp(y=ref2.latitude, x=ref2.longitude, method='linear')
                 dss.append(era5_5km)
             dss.append(merged_2020)
-            print(dss)
-            print(era5_5km)
-            print(merged_2020)
+            # print(dss)
+            # print(era5_5km)
+            # print(merged_2020)
             merged_era5 = xarray.merge(dss)
+            merged_era5= merged_era5 * 1000  ## era5 data were in meters
 
             dss = []
             for i in range(1991,2021,1):
@@ -303,9 +305,10 @@ class SpatialOperations():
             merged_noregrid = xarray.merge(dss)
             print(merged_noregrid)
             print(merged_era5)
-            filled_chirps = xarray.where(merged_noregrid.isnull(), merged_era5, merged_noregrid )
+            filled_chirps = xarray.where(merged_noregrid['precip'].isnull(), merged_era5['total_precipitation'], merged_noregrid['precip'] )
             for index_f in ECIO.functionList:
                 eci = filled_chirps.groupby('time.year').map(self.mapoverlatlon, funct=index_f)
+                eci.drop_vars(['x','y'])
                 eci_1km = eci.interp(latitude=ref.y, longitude=ref.x, method='linear')
                 nc_filename = city+'_'+index_f.__name__ + '.nc'
                 eci.to_netcdf(nc_filename)
