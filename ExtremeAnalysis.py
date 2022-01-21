@@ -162,7 +162,7 @@ class SpatialOperations():
         }
         self.era5data = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/ERA5'
         self.GEVparamDir = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/GEVparams'
-        self.GEVparamDir = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/GEVparamsEra5'
+        self.GEVparamDirEra5 = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/GEVparamsEra5'
         self.DATADIR = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/chirps/'
         self.MOVE2GDRIVE = True
         self.GDRIVELOC = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/CityECI2'
@@ -487,7 +487,7 @@ class SpatialOperations():
                 gevParams = self.calculateGEVObsEra5(city, index_f.__name__)
                 nc_filename = city + '_' + index_f.__name__ + '_Obs_GEVparams.nc'
                 gevParams.to_netcdf(nc_filename)
-                copyfile(nc_filename, os.path.join(self.GEVparamDir, nc_filename))
+                copyfile(nc_filename, os.path.join(self.GEVparamDirEra5, nc_filename))
 
     def calculateGEVObsEra5(self, city, param):
 
