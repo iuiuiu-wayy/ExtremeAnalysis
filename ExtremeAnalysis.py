@@ -18,17 +18,17 @@ class ExtremePrecIndexFunctions():
 
     def CDD(self,S):
     #  print('Shape S: ', S.shape)
-        
+
         ind_CDD=[]
         S_no_nan = S[~np.isnan(S)]
         N = len(S)
         N2 = len(S_no_nan)
-        if ((N2/N) < 0.3): 
+        if ((N2/N) < 0.3):
             ind_CDD = np.empty(1)
             ind_CDD = np.nan
         else:
             temp = 0
-            ind_CDD = 0 
+            ind_CDD = 0
             j =0
             while (j < N2):
                 while (j < N2 ) and (S_no_nan[j] < 1.0 ):
@@ -37,20 +37,20 @@ class ExtremePrecIndexFunctions():
                 if ind_CDD < temp:
                     ind_CDD = temp
                 temp = 0
-                j += 1 
+                j += 1
         return ind_CDD
-    
+
     def CWD(self,S):
         ind_CWD=[]
         S_no_nan = S[~np.isnan(S)]
         N = len(S)
         N2 = len(S_no_nan)
-        if ((N2/N) < 0.3): 
+        if ((N2/N) < 0.3):
             ind_CWD = np.empty(1)
             ind_CWD = np.nan
         else:
             temp = 0
-            ind_CWD = 0 
+            ind_CWD = 0
             j =0
             while (j < N2):
                 while (j < N2 ) and (S_no_nan[j] > 1.0 ):
@@ -59,61 +59,61 @@ class ExtremePrecIndexFunctions():
                 if ind_CWD < temp:
                     ind_CWD = temp
                 temp = 0
-                j += 1 
+                j += 1
         return ind_CWD
-    
+
     def rx1day(self,S):
         S_no_nan = S[~np.isnan(S)]
         N = len(S)
         N2 = len(S_no_nan)
         if ((N2/N) < 0.3):
-            return np.nan 
+            return np.nan
         return S.max()
-    
+
     def rx3day(self, S):
         ind_R3d=[]
         S_no_nan = S[~np.isnan(S)]
         N = len(S)
         N2 = len(S_no_nan)
-        if ((N2/N) < 0.3): 
+        if ((N2/N) < 0.3):
             ind_R3d = np.empty(1)
             ind_R3d = np.nan
         else:
             temp = 0
-            ind_R3d = 0 
+            ind_R3d = 0
             for i in range(0,N-2):
                 if (~np.isnan(S[i])) and  (~np.isnan(S[i+1]))  and  (~np.isnan(S[i+2])):
                     temp = S[i] + S[i+1] + S[i+2]
                 if ind_R3d < temp:
                     ind_R3d = temp
         return ind_R3d
-    
+
     def rx5day(self, S):
         ind_R3d=[]
         S_no_nan = S[~np.isnan(S)]
         N = len(S)
         N2 = len(S_no_nan)
-        if ((N2/N) < 0.3): 
+        if ((N2/N) < 0.3):
             ind_R5d = np.empty(1)
             ind_R5d = np.nan
         else:
             temp = 0
-            ind_R5d = 0 
+            ind_R5d = 0
             for i in range(0,N-4):
                 if (~np.isnan(S[i])) and  (~np.isnan(S[i+1]))  and  (~np.isnan(S[i+2]))  and  (~np.isnan(S[i+3])) and  (~np.isnan(S[i+4])):
                     temp = S[i] + S[i+1] + S[i+2] + S[i+3] + S[i+4]
                 if ind_R5d < temp:
                     ind_R5d = temp
         return ind_R5d
-    
+
     def r20mm(self, S):
         S_no_nan = S[~np.isnan(S)]
         N = len(S)
         N2 = len(S_no_nan)
         if ((N2/N) < 0.3):
-            return np.nan 
+            return np.nan
         return np.count_nonzero(S >= 20)
-    
+
     def Prec95p(self, S):
         S_no_nan = S[~np.isnan(S)]
         N = len(S)
@@ -122,26 +122,26 @@ class ExtremePrecIndexFunctions():
             return np.nan
         S = pd.Series(S)
         return S.quantile(q=0.95)
-    
+
     def Prec99p(self, S):
         S_no_nan = S[~np.isnan(S)]
         N = len(S)
         N2 = len(S_no_nan)
         if ((N2/N) < 0.3):
-            return np.nan 
+            return np.nan
         S = pd.Series(S)
         return S.quantile(q=0.99)
-    
+
 
     def mapoverlatlon(self, ds, funct):
- 
-        return xarray.apply_ufunc(funct, 
+
+        return xarray.apply_ufunc(funct,
                     ds,
                     input_core_dims=[["time"]],
                     exclude_dims=set(("time",)),
-                    vectorize=True,                 
+                    vectorize=True,
                     )
-    
+
 class SpatialOperations():
     def __init__(self):
         self.cities ={
@@ -154,7 +154,7 @@ class SpatialOperations():
             # 'Ternate': [1.36, 0.43, 126.12, 127.44],
             'Bandar Lampung': [-5.33, -5.53, 105.18, 105.35],
             'Mataram':[-8.55,  -8.62 ,116.06, 116.16],
-            'Samarinda': [0.71, 0.3, 117.04, 117.31],            
+            'Samarinda': [0.71, 0.3, 117.04, 117.31],
             'Pekanbaru': [0.61, 0.41, 101.36, 101.52],
             'Gorontalo': [0.6, 0.5, 123.0, 123.08],
             'Cirebon': [-6.68, -6.8, 108.51, 108.59],
@@ -162,6 +162,7 @@ class SpatialOperations():
         }
         self.era5data = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/ERA5'
         self.GEVparamDir = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/GEVparams'
+        self.GEVparamDir = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/GEVparamsEra5'
         self.DATADIR = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/chirps/'
         self.MOVE2GDRIVE = True
         self.GDRIVELOC = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/CityECI2'
@@ -170,7 +171,7 @@ class SpatialOperations():
         self.ReferenceFile = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/wc2.1_30s_prec_01.tif'
         self.DATAFROMDRIVE = False
         self.GCMdir = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/GCM'
-        self.GCMs = ['MIROC-ESM', 'IPSL-CM5A-LR', 'HadGEM2-ES', 'bcc-csm1-1', 'MIROC5', 'GFDL-ESM2M', 'CSIRO-Mk3-6-0', 'NorESM1-M', 'CCSM4'] 
+        self.GCMs = ['MIROC-ESM', 'IPSL-CM5A-LR', 'HadGEM2-ES', 'bcc-csm1-1', 'MIROC5', 'GFDL-ESM2M', 'CSIRO-Mk3-6-0', 'NorESM1-M', 'CCSM4']
         self.BaselineGCMdir = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/baselineGCM2'
         self.polynomParamsDir = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/PolynomParams2'
         self.correctedDataDir = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/correctedData2'
@@ -178,23 +179,23 @@ class SpatialOperations():
         self.SHPDir = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/SHPs'
 
         self.paramToGCMParamDict = {
-            'CDD' : 'cddETCCDI',
-            'CWD' : 'cwdETCCDI',
+            'CDD': 'cddETCCDI',
+            'CWD': 'cwdETCCDI',
             'r20mm': 'r20mmETCCDI',
             'rx1day': 'rx1dayETCCDI',
             'rx5day': 'rx5dayETCCDI',
-            'Prec95p': 'r95pETCCDI', 
+            'Prec95p': 'r95pETCCDI',
             'Prec99p': 'r99pETCCDI'
         }
-    
+
     def mapoverlatlon(self, ds, funct):
-        return xarray.apply_ufunc(funct, 
+        return xarray.apply_ufunc(funct,
                     ds,
                     input_core_dims=[["time"]],
                     exclude_dims=set(("time",)),
-                    vectorize=True,                 
+                    vectorize=True,
                     )
-    
+
     def getGridReference(self, city, ref='/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/wc2.1_30s_prec_01.tif'):
         if self.DATAFROMDRIVE:
             ref = self.ReferenceFile
@@ -212,7 +213,7 @@ class SpatialOperations():
         mask_lat = (ref.y >= min_lat) & (ref.y <= max_lat)
         cropped_ref = ref.where(mask_lon & mask_lat, drop=True)
         return cropped_ref
-    
+
     def getMergedCropRegridedData(self, city):
         # if self.DATAFROMDRIVE:
         #     with xarray.open_dataset(os.path.join(self.GDRIVELOC, 'Merged_'+city+'.nc')) as dataset:
@@ -225,9 +226,9 @@ class SpatialOperations():
         min_lat = min_lat - 0.2
         min_lon = min_lon - 0.2
         dss = []
-        for i in range(1991,2021,1):
+        for i in range(1991, 2021, 1):
             print(i)
-            with xarray.open_dataset(os.path.join(self.DATADIR, 'chirps-v2.0.'+str(i)+'.days_p05.nc')) as dataset:
+            with xarray.open_dataset(os.path.join(self.DATADIR, 'chirps-v2.0.' + str(i) + '.days_p05.nc')) as dataset:
                 prec = dataset['precip']
             mask_lon = (prec.longitude >= min_lon) & (prec.longitude <= max_lon)
             mask_lat = (prec.latitude >= min_lat) & (prec.latitude <= max_lat)
@@ -236,11 +237,11 @@ class SpatialOperations():
         merged_noregrid = xarray.merge(dss)
         merged = merged_noregrid.interp(latitude=ref.y, longitude=ref.x, method="linear")
         merged = merged.drop(['latitude', 'longitude'])
-        merged.to_netcdf('Merged_'+city+'.nc')
+        merged.to_netcdf('Merged_' + city + '.nc')
         if self.MOVE2GDRIVE:
-            copyfile('Merged_'+city+'.nc', os.path.join(self.GDRIVELOC, 'Merged_'+city+'.nc'))
+            copyfile('Merged_' + city + '.nc', os.path.join(self.GDRIVELOC, 'Merged_' + city + '.nc'))
         return merged
-    
+
     def run_all_obs(self, ECIO):
         for city in self.cities.keys():
             ref = self.getGridReference(city)
@@ -270,7 +271,7 @@ class SpatialOperations():
             #### grep era5 2016 data
             era5 = xarray.open_dataset(os.path.join(self.era5data, 'era5_2016.nc'))
             era5_5km_2016 = era5.interp(y=ref2.latitude, x=ref2.longitude, method='linear')
-            
+
             ### grep era5 2020 data
             era5 = xarray.open_dataset(os.path.join(self.era5data, 'era5_2020.nc'))
             era5_5km_2020 = era5.interp(y=ref2.latitude, x=ref2.longitude, method='linear')
@@ -283,7 +284,7 @@ class SpatialOperations():
             dss = []
             for year in range(1991, 2020):
                 with xarray.open_dataset(os.path.join(self.era5data, 'era5_{}.nc'.format(year))) as era5:
-                    era5_prec = era5['total_precipitation']  
+                    era5_prec = era5['total_precipitation']
                 era5_5km = era5_prec.interp(y=ref2.latitude, x=ref2.longitude, method='linear')
                 dss.append(era5_5km)
             dss.append(merged_2020)
@@ -291,12 +292,12 @@ class SpatialOperations():
             # print(era5_5km)
             # print(merged_2020)
             merged_era5 = xarray.merge(dss)
-            merged_era5= merged_era5 * 1000  ## era5 data were in meters
+            merged_era5 = merged_era5 * 1000  ## era5 data were in meters
 
             dss = []
-            for i in range(1991,2021,1):
+            for i in range(1991, 2021, 1):
                 print(i)
-                with xarray.open_dataset(os.path.join(self.DATADIR, 'chirps-v2.0.'+str(i)+'.days_p05.nc')) as dataset:
+                with xarray.open_dataset(os.path.join(self.DATADIR, 'chirps-v2.0.' + str(i) + '.days_p05.nc')) as dataset:
                     prec = dataset['precip']
                 mask_lon = (prec.longitude >= min_lon) & (prec.longitude <= max_lon)
                 mask_lat = (prec.latitude >= min_lat) & (prec.latitude <= max_lat)
@@ -357,19 +358,19 @@ class SpatialOperations():
                 if item.text.startswith(tuple(vars)):
                     # print(item.text)
                     files.append(item.text)
-            urls = [url+f for f in files]
+            urls = [url + f for f in files]
             # [i.text if i.text.endswith('.nc') for i in ]
             # type(tuple(vars))
             wget.download(outdir, urls)
 
-    def Combine_baseline_model(self, city='Mataram', rcp='rcp45',gcm = 'CCSM4',  
+    def Combine_baseline_model(self, city='Mataram', rcp='rcp45',gcm = 'CCSM4',
                                param='CDD' ):
         modelparam = self.paramToGCMParamDict[param]
         hist = xarray.open_dataset( glob( os.path.join(self.GCMdir, gcm) + '/'+
-                                         modelparam+'_yr_'+gcm+'_historical' +'*.nc')[0]) 
+                                         modelparam+'_yr_'+gcm+'_historical' +'*.nc')[0])
         future = xarray.open_dataset(glob( os.path.join(self.GCMdir, gcm) + '/'+
                                          modelparam+'_yr_'+gcm+'_'+rcp +'*.nc')[0])
-        
+
         last_index = len(hist['time'])
         hist_crop = hist.isel(time=slice( last_index - 15, last_index ))
 
@@ -379,7 +380,7 @@ class SpatialOperations():
         baseline_model = xarray.concat([hist_crop, future_crop], dim='time')
 
         newtime = []
-        # baseline_model['time'] 
+        # baseline_model['time']
         for t in baseline_model.time.values:
             try:
                 year = t.year
@@ -389,7 +390,7 @@ class SpatialOperations():
         baseline_model['time'] = newtime
 
         index_data = baseline_model[modelparam]
- 
+
         ref = self.getGridReference(city)
         max_lat, min_lat, min_lon, max_lon = self.cities[city]
         max_lat = max_lat + 0.2
@@ -411,13 +412,13 @@ class SpatialOperations():
 
         # if self.MOVE2GDRIVE:
         #     copyfile(filename, os.path.join(self.GDRIVELOC, filename))
-        
+
         return cropped_ds
 
     def run_all_baseline_models(self):
         ECIO = ExtremePrecIndexFunctions()
-        
-        
+
+
         for city in self.cities.keys():
             for gcm in self.GCMs:
                 for rcp in ['rcp45', 'rcp85']:
@@ -428,11 +429,11 @@ class SpatialOperations():
                         nc_filename = city+'_'+index_f.__name__ + '_baseline_'+ rcp+'_'+gcm+'.nc'
                         combined.to_netcdf(nc_filename)
                         copyfile(nc_filename, os.path.join(self.BaselineGCMdir, nc_filename))
-                        
+
     def getObsData(self, city, param):
-        nc_filename = city+'_'+param + '.nc'
+        nc_filename = city + '_' + param + '.nc'
         # copyfile(nc_filename, os.path.join(self.GDRIVELOC, nc_filename))
-        
+
         with xarray.open_dataset(os.path.join(self.GDRIVELOC, nc_filename)) as dataset:
             obs_data = dataset['precip']
         return obs_data
@@ -444,19 +445,19 @@ class SpatialOperations():
         return mod_data
 
     def calculateGEVObs(self, city, param):
-        
+
         def calculateGEVParam(S):
             S_no_nan = S[~np.isnan(S)]
             N = len(S)
             N2 = len(S_no_nan)
             if ((N2/N) < 0.3):
                 return np.array([np.nan, np.nan, np.nan])
-                
+
             params = gev.fit(S)
             # print('S and params shape', S.shape, params)
             return np.array(params)
         # calculateGEVParam(S)
-        
+
         obs_data = self.getObsData(city, param)
         gevParams = xarray.apply_ufunc(
             calculateGEVParam,
@@ -478,15 +479,53 @@ class SpatialOperations():
                 gevParams.to_netcdf(nc_filename)
                 copyfile(nc_filename, os.path.join(self.GEVparamDir, nc_filename))
 
+    def run_all_calculateGEVObsParamEra5(self):
+        for city in self.cities.keys():
+            print(city)
+            for index_f in [ECIO.CDD, ECIO.CWD, ECIO.Prec95p, ECIO.Prec99p, ECIO.rx1day, ECIO.rx5day, ECIO.r20mm]:
+                print(index_f.__name__)
+                gevParams = self.calculateGEVObsEra5(city, index_f.__name__)
+                nc_filename = city + '_' + index_f.__name__ + '_Obs_GEVparams.nc'
+                gevParams.to_netcdf(nc_filename)
+                copyfile(nc_filename, os.path.join(self.GEVparamDir, nc_filename))
+
+    def calculateGEVObsEra5(self, city, param):
+
+        def calculateGEVParam(S):
+            S_no_nan = S[~np.isnan(S)]
+            N = len(S)
+            N2 = len(S_no_nan)
+            if ((N2 / N) < 0.3):
+                return np.array([np.nan, np.nan, np.nan])
+
+            params = gev.fit(S)
+            # print('S and params shape', S.shape, params)
+            return np.array(params)
+        # calculateGEVParam(S)
+
+        # obs_data = self.getObsData(city, param)
+        nc_filename = city + '_' + param + '.nc'
+        with xarray.open_dataset(os.path.join(self.CityETCCDIEra5, nc_filename)) as f:
+            obs_data = f['precip']
+        gevParams = xarray.apply_ufunc(
+            calculateGEVParam,
+            obs_data,  # .isel(x=20,y=20),
+            input_core_dims=[["year"]],
+            output_core_dims=[['param']],
+            exclude_dims=set(("year",)),
+            vectorize=True,
+        )
+        return gevParams
+
     def calculateGEVModelParam(self, city, gcm, rcp, param):
-        
+
         def calculateGEVParam(S):
             S_no_nan = S[~np.isnan(S)]
             N = len(S)
             N2 = len(S_no_nan)
             if ((N2/N) < 0.3):
                 return np.array([np.nan, np.nan, np.nan])
-            
+
             S = S[~np.isnan(S)]
             params = gev.fit(S)
             # print('S and params shape', S.shape, params)
@@ -519,7 +558,7 @@ class SpatialOperations():
                         nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_ModGEVparams.nc'
                         gevModParams.to_netcdf(nc_filename)
                         copyfile(nc_filename, os.path.join(self.GEVparamDir, nc_filename))
-    
+
     def getGEVParams(self, city, gcm, rcp, param):
         if gcm in ['Obs', 'obs', 'observation']:
             nc_filename = city + '_' + param + '_Obs_GEVparams.nc'
@@ -553,7 +592,7 @@ class SpatialOperations():
         # if gcm in ['obs', 'Obs', 'observation']:
         #     dataa = self.getObsData(city, param)
         #     yot = 'year'
-            
+
         # else:
         #     dataa = self.getModelBaselineData( city, param, rcp, gcm)
         #     yot = 'time'
@@ -568,7 +607,7 @@ class SpatialOperations():
         return inverse_cdf_obs
 
     def getCDF(self, city, gcm,param, rcp='' ):
-                
+
         def calculateGEVParam(S,params):
             # print('params', params.shape)
             # print(S.shape)
@@ -584,12 +623,12 @@ class SpatialOperations():
             S = S[~np.isnan(S)]
             cdf = gev.cdf(x, params[0], params[1], params[2])
             return cdf
-        
+
         GEVparams = self.getGEVParams(city, gcm, rcp, param)
         if gcm in ['obs', 'Obs', 'observation']:
             dataa = self.getObsData(city, param)
             yot = 'year'
-            
+
         else:
             dataa = self.getModelBaselineData( city, param, rcp, gcm)
             yot = 'time'
@@ -618,7 +657,7 @@ class SpatialOperations():
                 out = np.empty(deg + 2)
                 out[:] = np.nan
                 return out
-            
+
             Y_no_nan = Y[~np.isnan(Y)]
             N = len(Y)
             N2 = len(Y_no_nan)
@@ -637,18 +676,18 @@ class SpatialOperations():
             if param in ['CDD', 'CWD','r20mm']:
                 rc = np.where( np.logical_or(X>365, Y>365) )
             else:
-                rc = np.where(np.logical_or( X>2*threshold, Y>2*threshold )) 
+                rc = np.where(np.logical_or( X>2*threshold, Y>2*threshold ))
             if rc[0].size == 0:
                 ri = len(X)
             else:
-                ri = rc[0].min() 
+                ri = rc[0].min()
             Xnew = X[li:ri]
             Ynew = Y[li:ri]
             # print('X ',Xnew.min(), Xnew.max())
             # print('Y ', Ynew.min(), Ynew.max())
             # for i in range(len(Xnew)):
                 # print(Xnew[i], Ynew[i])
-            
+
             def fit_func(x, a, b, c):
                 # Curve fitting function
                 return a * x**3 + b * x**2 + c * x  # d=0 is implied
@@ -689,7 +728,7 @@ class SpatialOperations():
         )
 
         return polyParams
-    
+
     def run_all_generatePolyfitParamsR2(self):
         self.cities ={
             'Banjarmasin': [-3.26,  -3.37, 114.54 , 114.65],
@@ -701,7 +740,7 @@ class SpatialOperations():
             # # 'Ternate': [1.36, 0.43, 126.12, 127.44],
             # 'Bandar Lampung': [-5.33, -5.53, 105.18, 105.35],
             # 'Mataram':[-8.55,  -8.62 ,116.06, 116.16],
-            # 'Samarinda': [0.71, 0.3, 117.04, 117.31],            
+            # 'Samarinda': [0.71, 0.3, 117.04, 117.31],
             # 'Pekanbaru': [0.61, 0.41, 101.36, 101.52],
             # 'Gorontalo': [0.6, 0.5, 123.0, 123.08],
             # 'Cirebon': [-6.68, -6.8, 108.51, 108.59],
@@ -718,7 +757,7 @@ class SpatialOperations():
                         nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_PolynomParamsR2.nc'
                         gevModParams.to_netcdf(nc_filename)
                         copyfile(nc_filename, os.path.join(self.polynomParamsDir, nc_filename))
-                
+
     def getPolynomParamsR2(self, city, gcm, rcp, param):
 
         nc_filename = city + '_' + param + '_' + rcp+gcm + '_PolynomParamsR2.nc'
@@ -728,7 +767,7 @@ class SpatialOperations():
 
         return data_params
 
-    
+
     def ExtremeDownscalingRun(self, city, gcm, rcp, param, data2correct):
         # ECIO = ExtremePrecIndexFunctions()
         # So = SpatialOperations()
@@ -741,7 +780,7 @@ class SpatialOperations():
 
         polyparams = self.getPolynomParamsR2( city, gcm, rcp, param)
 
-                
+
         if data2correct == 'baseline':
             cropped_ds = self.getModelBaselineData(city, param, rcp, gcm)
         else:
@@ -805,7 +844,7 @@ class SpatialOperations():
             # # 'Ternate': [1.36, 0.43, 126.12, 127.44],
             # 'Bandar Lampung': [-5.33, -5.53, 105.18, 105.35],
             # 'Mataram':[-8.55,  -8.62 ,116.06, 116.16],
-            # 'Samarinda': [0.71, 0.3, 117.04, 117.31],            
+            # 'Samarinda': [0.71, 0.3, 117.04, 117.31],
             # 'Pekanbaru': [0.61, 0.41, 101.36, 101.52],
             # 'Gorontalo': [0.6, 0.5, 123.0, 123.08],
             # 'Cirebon': [-6.68, -6.8, 108.51, 108.59],
@@ -818,7 +857,7 @@ class SpatialOperations():
                     print(city, gcm, rcp)
                     for index_f in [ECIO.CDD, ECIO.CWD, ECIO.Prec95p, ECIO.Prec99p, ECIO.rx1day, ECIO.rx5day, ECIO.r20mm]:
                         for data2correct in ['baseline', 'rcp']:
-                                
+
                             print(data2correct, index_f.__name__)
 
                             correctedData = self.ExtremeDownscalingRun(city=city, gcm=gcm, rcp=rcp, param=index_f.__name__, data2correct=data2correct)
@@ -829,20 +868,20 @@ class SpatialOperations():
                                 nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_'+ rcp+'_corrected.nc'
                             correctedData.to_netcdf(nc_filename)
                             copyfile(nc_filename, os.path.join(self.correctedDataDir, nc_filename))
-    
+
     def getCorrectedData(self,  city, gcm, rcp, param, data2correct):
         if data2correct == 'baseline':
             nc_filename = city + '_' + param + '_' + rcp+gcm + '_baseline_corrected.nc'
         else:
             nc_filename = city + '_' + param + '_' + rcp+gcm + '_'+ rcp+'_corrected.nc'
-        
+
         varname = '__xarray_dataarray_variable__'
         with xarray.open_dataset(os.path.join(self.correctedDataDir, nc_filename)) as dataset:
             data_params = dataset[varname]
 
         return data_params
         ##### plot the result (?)
-    
+
     def generateQualityControl(self, city, gcm, rcp, param, data2correct):
         correctedData = self.getCorrectedData(city, gcm, rcp, param, data2correct)
         def calculate_std(S):
@@ -861,7 +900,7 @@ class SpatialOperations():
 
         stds = xarray.apply_ufunc(
             calculate_std,
-            correctedData, 
+            correctedData,
             input_core_dims= [['time']],
                 # output_core_dims=[['time']],
             exclude_dims=set(('time',)),
@@ -874,9 +913,9 @@ class SpatialOperations():
 
         xs = xarray.DataArray(xs, dims=['y', 'x'])
         ys = xarray.DataArray(ys, dims=['y', 'x'])
-        xs['y'] = correctedData.y.values 
+        xs['y'] = correctedData.y.values
         xs['x'] = correctedData.x.values
-        ys['y'] = correctedData.y.values 
+        ys['y'] = correctedData.y.values
         ys['x'] = correctedData.x.values
 
         time_index = xarray.DataArray(range(len(correctedData.time.values)), dims=['time'])
@@ -917,7 +956,7 @@ class SpatialOperations():
                             Sdata[t] = mean_neig
                     if Sdata[t] <= 0 :
                         Sdata[t] = mean_neig
-                    
+
                     if (prob_grid.isel(x=x,y=y).values == 1):
                         cond = False
                         try:
@@ -926,16 +965,16 @@ class SpatialOperations():
                             print('x y t',x, y, t)
                             print(arr)
                             if t - 1 > 0:
-                                Sdata[t] = Sdata[t-1] 
-                        
+                                Sdata[t] = Sdata[t-1]
+
                         if cond:
-                            Sdata[t] = mean_neig 
+                            Sdata[t] = mean_neig
                     # mean_neig_arr.append(mean_neig)
-                
+
                 # mean_neigh_arr = np.array(mean_neigh_arr)
                 # print(std)
                 # help(Sdatanan.std)
-                
+
                 # Sdata = np.where(Sdata <= 0, mean_neig, Sdata)
                 # Sdata = np.where(Sdata > mean + 3*std, mean_neig, Sdata)
                 # Sdata = np.where(Sdata < mean - 3*std, mean_neig, Sdata)
@@ -953,7 +992,7 @@ class SpatialOperations():
             vectorize=True,
         )
         return QC
-    
+
     def run_all_QualityControl(self):
         self.cities ={
             'Banjarmasin': [-3.26,  -3.37, 114.54 , 114.65],
@@ -965,7 +1004,7 @@ class SpatialOperations():
             # # 'Ternate': [1.36, 0.43, 126.12, 127.44],
             # 'Bandar Lampung': [-5.33, -5.53, 105.18, 105.35],
             # 'Mataram':[-8.55,  -8.62 ,116.06, 116.16],
-            # 'Samarinda': [0.71, 0.3, 117.04, 117.31],            
+            # 'Samarinda': [0.71, 0.3, 117.04, 117.31],
             # 'Pekanbaru': [0.61, 0.41, 101.36, 101.52],
             # 'Gorontalo': [0.6, 0.5, 123.0, 123.08],
             # 'Cirebon': [-6.68, -6.8, 108.51, 108.59],
@@ -978,7 +1017,7 @@ class SpatialOperations():
                     print(city, gcm, rcp)
                     for index_f in [ECIO.CDD, ECIO.CWD, ECIO.Prec95p, ECIO.Prec99p, ECIO.rx1day, ECIO.rx5day, ECIO.r20mm]:
                         for data2correct in ['baseline', 'rcp']:
-                                
+
                             print(data2correct, index_f.__name__)
 
                             QC = self.generateQualityControl(city=city, gcm=gcm, rcp=rcp, param=index_f.__name__, data2correct=data2correct)
@@ -989,7 +1028,7 @@ class SpatialOperations():
                                 nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_'+ rcp+'_QC.nc'
                             QC.to_netcdf(nc_filename)
                             copyfile(nc_filename, os.path.join(self.QCDir, nc_filename))
-    
+
     def getQCData(self, city, gcm, rcp, param, data2correct):
         if data2correct == 'baseline':
             nc_filename = city + '_' + param + '_' + rcp+gcm + '_baseline_QC.nc'
@@ -1002,7 +1041,7 @@ class SpatialOperations():
 
         return data_params
 
-    
+
     def calculate_trends(self, data_x, var='time'):
 
         def inner_calculate_trend(S):
@@ -1012,7 +1051,7 @@ class SpatialOperations():
             N2 = len(S_no_nan)
             if ((N2/N) < 0.3):
                 return np.array([np.nan])
-            
+
             x = np.array(range(len(S)))
             a, b = np.polyfit(x, S, 1)
             return a
@@ -1026,5 +1065,3 @@ class SpatialOperations():
             vectorize=True,
         )
         return trends
-
-
