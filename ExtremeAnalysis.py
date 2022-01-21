@@ -479,7 +479,7 @@ class SpatialOperations():
                 gevParams.to_netcdf(nc_filename)
                 copyfile(nc_filename, os.path.join(self.GEVparamDir, nc_filename))
 
-    def run_all_calculateGEVObsParamEra5(self):
+    def run_all_calculateGEVObsParamEra5(self, ECIO):
         for city in self.cities.keys():
             print(city)
             for index_f in [ECIO.CDD, ECIO.CWD, ECIO.Prec95p, ECIO.Prec99p, ECIO.rx1day, ECIO.rx5day, ECIO.r20mm]:
