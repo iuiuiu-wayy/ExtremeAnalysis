@@ -506,7 +506,7 @@ class SpatialOperations():
         # obs_data = self.getObsData(city, param)
         nc_filename = city + '_' + param + '.nc'
         with xarray.open_dataset(os.path.join(self.CityETCCDIEra5, nc_filename)) as f:
-            obs_data = f['precip']
+            obs_data = f['__xarray_dataarray_variable__']
         gevParams = xarray.apply_ufunc(
             calculateGEVParam,
             obs_data,  # .isel(x=20,y=20),
