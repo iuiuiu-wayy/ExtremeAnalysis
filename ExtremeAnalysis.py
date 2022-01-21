@@ -308,10 +308,10 @@ class SpatialOperations():
             filled_chirps = xarray.where(merged_noregrid['precip'].isnull(), merged_era5['total_precipitation'], merged_noregrid['precip'] )
             for index_f in ECIO.functionList:
                 eci = filled_chirps.groupby('time.year').map(self.mapoverlatlon, funct=index_f)
-                eci.drop_vars(['x','y'])
+                eci = eci.drop_vars(['x','y'])
                 eci_1km = eci.interp(latitude=ref.y, longitude=ref.x, method='linear')
                 nc_filename = city+'_'+index_f.__name__ + '.nc'
-                eci.to_netcdf(nc_filename)
+                eci_1km.to_netcdf(nc_filename)
                 copyfile(nc_filename, os.path.join(self.CityETCCDIEra5, nc_filename))
     # def run_selectedf_obs(self, FunList):
     #     for city in self.cities.keys():
