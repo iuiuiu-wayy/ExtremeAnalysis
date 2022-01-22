@@ -903,13 +903,14 @@ class SpatialOperations():
         return data_params
         ##### plot the result (?)
 
-    def generateQualityControl(self, city, gcm, rcp, param, data2correct):
-        correctedData = self.getCorrectedData(city, gcm, rcp, param, data2correct)
+    def generateQualityControl(self, city, gcm, rcp, param, data2correct, obs):
+        correctedData = self.getCorrectedData(city, gcm, rcp, param, data2correct, obs)
+
         def calculate_std(S):
             S_no_nan = S[~np.isnan(S)]
             return S_no_nan.std()
 
-        def neighbours_of(i, j,  len_i, len_j):
+        def neighbours_of(i, j, len_i, len_j):
             """Positions of neighbours (includes out of bounds but excludes cell itself)."""
             ui = i +1 if i + 1 < len_i else  i
             li = i - 1 if i - 1 >= 0 else  i
@@ -1014,10 +1015,10 @@ class SpatialOperations():
         )
         return QC
 
-    def run_all_QualityControl(self):
+    def run_all_QualityControl(self, ECIO, obs='era5'):
         self.cities ={
             'Banjarmasin': [-3.26,  -3.37, 114.54 , 114.65],
-            'Pangkalpinang': [-2.07,  -2.16, 106.06, 106.18],
+            # 'Pangkalpinang': [-2.07,  -2.16, 106.06, 106.18],
             # 'Ternate1' : [0.921, 0.747, 127.288, 127.395],
             # 'Ternate2' : [0.482, 0.431, 127.38, 127.441],
             # 'Ternate3' : [1.354, 1.279, 126.356, 126.417],
@@ -1041,12 +1042,16 @@ class SpatialOperations():
 
                             print(data2correct, index_f.__name__)
 
-                            QC = self.generateQualityControl(city=city, gcm=gcm, rcp=rcp, param=index_f.__name__, data2correct=data2correct)
+                            QC = self.generateQualityControl(city=city, gcm=gcm, rcp=rcp, param=index_f.__name__, data2correct=data2correct, obs=obs)
                             if data2correct == 'baseline':
 
-                                nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_baseline_QC.nc'
+                                nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_baseline_QC'
                             else:
-                                nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_'+ rcp+'_QC.nc'
+                                nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_'+ rcp+'_QC'
+                            if obs == 'era5':
+                                nc_filename = nc_filename + 'era5.nc'
+                            else:
+                                nc_filename = nc_filename + '.nc'
                             QC.to_netcdf(nc_filename)
                             copyfile(nc_filename, os.path.join(self.QCDir, nc_filename))
 
