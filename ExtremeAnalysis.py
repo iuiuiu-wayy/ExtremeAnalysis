@@ -418,7 +418,6 @@ class SpatialOperations():
     def run_all_baseline_models(self):
         ECIO = ExtremePrecIndexFunctions()
 
-
         for city in self.cities.keys():
             for gcm in self.GCMs:
                 for rcp in ['rcp45', 'rcp85']:
@@ -563,10 +562,17 @@ class SpatialOperations():
         if gcm in ['Obs', 'obs', 'observation']:
             nc_filename = city + '_' + param + '_Obs_GEVparams.nc'
             varname = 'precip'
+            gev_dir = self.GEVparamDir
+        if gcm in ['era5', 'Era5', 'ERA5']:
+            nc_filename = city + '_' + param + '_Obs_GEVparams.nc'
+            varname = '__xarray_dataarray_variable__'
+            gev_dir = self.GEVparamDirEra5
         else:
-            nc_filename = city + '_' + param + '_' + rcp+gcm + '_ModGEVparams.nc'
+            nc_filename = city + '_' + param + '_' + rcp + gcm + '_ModGEVparams.nc'
             varname = self.paramToGCMParamDict[param]
-        with xarray.open_dataset(os.path.join(self.GEVparamDir, nc_filename)) as dataset:
+            gev_dir = self.GEVparamDir
+
+        with xarray.open_dataset(os.path.join(gev_dir, nc_filename)) as dataset:
             data_params = dataset[varname]
 
         return data_params
@@ -645,7 +651,7 @@ class SpatialOperations():
         # cdcdf_obsf['param'] = np.linspace(0,max_val, 1000)
         return cdf_obs
 
-    def generatePolyfitParamsR2(self, city, gcm, param, rcp):
+    def generatePolyfitParamsR2(self, city, gcm, param, rcp, obs):
 
         def polyfitfunct(X, Y, threshold):
             deg = 3
@@ -704,7 +710,7 @@ class SpatialOperations():
             # polyparams = np.array( [a, b, c])
             return np.append(params ,r_squared)
 
-        obs_inv_cdf = self.getInverseCDF(city, 'obs', param, rcp)
+        obs_inv_cdf = self.getInverseCDF(city, obs, param, rcp)
         mod_inv_cdf = self.getInverseCDF(city, gcm, param, rcp)
         obs_data = self.getObsData(city, param)
         mod_data = self.getModelBaselineData( city, param, rcp, gcm)
@@ -729,10 +735,10 @@ class SpatialOperations():
 
         return polyParams
 
-    def run_all_generatePolyfitParamsR2(self):
-        self.cities ={
+    def run_all_generatePolyfitParamsR2(self, ECIO, obs='era5'):
+        self.cities = {
             'Banjarmasin': [-3.26,  -3.37, 114.54 , 114.65],
-            'Pangkalpinang': [-2.07,  -2.16, 106.06, 106.18],
+            # 'Pangkalpinang': [-2.07,  -2.16, 106.06, 106.18],
             # 'Ternate1' : [0.921, 0.747, 127.288, 127.395],
             # 'Ternate2' : [0.482, 0.431, 127.38, 127.441],
             # 'Ternate3' : [1.354, 1.279, 126.356, 126.417],
@@ -753,9 +759,13 @@ class SpatialOperations():
                     print(city, gcm, rcp)
                     for index_f in [ECIO.CDD, ECIO.CWD, ECIO.Prec95p, ECIO.Prec99p, ECIO.rx1day, ECIO.rx5day, ECIO.r20mm]:
                         print(index_f.__name__)
-                        gevModParams = self.generatePolyfitParamsR2(city=city, gcm=gcm, rcp=rcp, param=index_f.__name__)
-                        nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_PolynomParamsR2.nc'
+                        gevModParams = self.generatePolyfitParamsR2(city=city, gcm=gcm, rcp=rcp, param=index_f.__name__, obs=obs)
+                        if obs == 'era5':
+                            nc_filename = city + '_' + index_f.__name__ + '_' + rcp + gcm + '_PolynomParamsR2Era5.nc'
+                        else:
+                            nc_filename = city + '_' + index_f.__name__ + '_' + rcp + gcm + '_PolynomParamsR2.nc'
                         gevModParams.to_netcdf(nc_filename)
+
                         copyfile(nc_filename, os.path.join(self.polynomParamsDir, nc_filename))
 
     def getPolynomParamsR2(self, city, gcm, rcp, param):
