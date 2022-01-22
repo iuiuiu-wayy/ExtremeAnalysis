@@ -768,9 +768,11 @@ class SpatialOperations():
 
                         copyfile(nc_filename, os.path.join(self.polynomParamsDir, nc_filename))
 
-    def getPolynomParamsR2(self, city, gcm, rcp, param):
-
-        nc_filename = city + '_' + param + '_' + rcp+gcm + '_PolynomParamsR2.nc'
+    def getPolynomParamsR2(self, city, gcm, rcp, param, obs):
+        if obs in ['era5', 'Era5', 'ERA5']:
+            nc_filename = city + '_' + param + '_' + rcp+gcm + '_PolynomParamsR2Era5.nc'
+        else:
+            nc_filename = city + '_' + param + '_' + rcp+gcm + '_PolynomParamsR2.nc'
         varname = '__xarray_dataarray_variable__'
         with xarray.open_dataset(os.path.join(self.polynomParamsDir, nc_filename)) as dataset:
             data_params = dataset[varname]
@@ -778,7 +780,7 @@ class SpatialOperations():
         return data_params
 
 
-    def ExtremeDownscalingRun(self, city, gcm, rcp, param, data2correct):
+    def ExtremeDownscalingRun(self, city, gcm, rcp, param, data2correct, obs):
         # ECIO = ExtremePrecIndexFunctions()
         # So = SpatialOperations()
         # city = 'Banjarmasin'
@@ -787,15 +789,13 @@ class SpatialOperations():
         # rcp = 'rcp45'
         # data2correct = 'rcp' #### baseline rcp45 or rcp
 
-
-        polyparams = self.getPolynomParamsR2( city, gcm, rcp, param)
-
+        polyparams = self.getPolynomParamsR2(city, gcm, rcp, param, obs)
 
         if data2correct == 'baseline':
             cropped_ds = self.getModelBaselineData(city, param, rcp, gcm)
         else:
             modelparam = self.paramToGCMParamDict[param]
-            with xarray.open_mfdataset(glob( os.path.join(self.GCMdir, gcm) + '/'+ modelparam+'_yr_'+gcm+'_'+rcp +'*.nc')[0]) as f:
+            with xarray.open_mfdataset(glob(os.path.join(self.GCMdir, gcm) + '/'+ modelparam+'_yr_'+gcm+'_'+rcp +'*.nc')[0]) as f:
                 future_crop = f.isel(time=slice(16,16+50))
             index_data = future_crop[modelparam]
 
@@ -843,10 +843,10 @@ class SpatialOperations():
         return correctedData
 
 
-    def run_all_ExtremeDownscalingRun(self):
+    def run_all_ExtremeDownscalingRun(self, ECIO, obs='era5'):
         self.cities ={
             'Banjarmasin': [-3.26,  -3.37, 114.54 , 114.65],
-            'Pangkalpinang': [-2.07,  -2.16, 106.06, 106.18],
+            # 'Pangkalpinang': [-2.07,  -2.16, 106.06, 106.18],
             # 'Ternate1' : [0.921, 0.747, 127.288, 127.395],
             # 'Ternate2' : [0.482, 0.431, 127.38, 127.441],
             # 'Ternate3' : [1.354, 1.279, 126.356, 126.417],
@@ -870,20 +870,31 @@ class SpatialOperations():
 
                             print(data2correct, index_f.__name__)
 
-                            correctedData = self.ExtremeDownscalingRun(city=city, gcm=gcm, rcp=rcp, param=index_f.__name__, data2correct=data2correct)
+                            correctedData = self.ExtremeDownscalingRun(city=city, gcm=gcm, rcp=rcp, param=index_f.__name__, data2correct=data2correct, obs=obs)
                             if data2correct == 'baseline':
-
-                                nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_baseline_corrected.nc'
+                                if obs == 'era5':
+                                    nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_baseline_corrected_era5.nc'
+                                else:
+                                    nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_baseline_corrected.nc'
                             else:
-                                nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_'+ rcp+'_corrected.nc'
+                                if obs == 'era5':
+                                    nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_'+ rcp+'_corrected_era5.nc'
+                                else:
+                                    nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_'+ rcp+'_corrected.nc'
                             correctedData.to_netcdf(nc_filename)
                             copyfile(nc_filename, os.path.join(self.correctedDataDir, nc_filename))
 
-    def getCorrectedData(self,  city, gcm, rcp, param, data2correct):
+    def getCorrectedData(self, city, gcm, rcp, param, data2correct, obs):
         if data2correct == 'baseline':
-            nc_filename = city + '_' + param + '_' + rcp+gcm + '_baseline_corrected.nc'
+            if obs == 'era5':
+                nc_filename = city + '_' + param + '_' + rcp + gcm + '_baseline_corrected_era5.nc'
+            else:
+                nc_filename = city + '_' + param + '_' + rcp + gcm + '_baseline_corrected.nc'
         else:
-            nc_filename = city + '_' + param + '_' + rcp+gcm + '_'+ rcp+'_corrected.nc'
+            if obs == 'era5':
+                nc_filename = city + '_' + param + '_' + rcp + gcm + '_' + rcp + '_corrected_era5.nc'
+            else:
+                nc_filename = city + '_' + param + '_' + rcp + gcm + '_' + rcp + '_corrected.nc'
 
         varname = '__xarray_dataarray_variable__'
         with xarray.open_dataset(os.path.join(self.correctedDataDir, nc_filename)) as dataset:
