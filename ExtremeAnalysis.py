@@ -1055,12 +1055,16 @@ class SpatialOperations():
                             QC.to_netcdf(nc_filename)
                             copyfile(nc_filename, os.path.join(self.QCDir, nc_filename))
 
-    def getQCData(self, city, gcm, rcp, param, data2correct):
+    def getQCData(self, city, gcm, rcp, param, data2correct, obs='era5'):
         if data2correct == 'baseline':
-            nc_filename = city + '_' + param + '_' + rcp+gcm + '_baseline_QC.nc'
-        else:
-            nc_filename = city + '_' + param + '_' + rcp+gcm + '_'+ rcp+'_QC.nc'
 
+            nc_filename = city + '_' + param + '_' + rcp+gcm + '_baseline_QC'
+        else:
+            nc_filename = city + '_' + param + '_' + rcp+gcm + '_'+ rcp+'_QC'
+        if obs == 'era5':
+            nc_filename = nc_filename + 'era5.nc'
+        else:
+            nc_filename = nc_filename + '.nc'
         varname = '__xarray_dataarray_variable__'
         with xarray.open_dataset(os.path.join(self.QCDir, nc_filename)) as dataset:
             data_params = dataset[varname]
