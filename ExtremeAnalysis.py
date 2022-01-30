@@ -418,7 +418,6 @@ class SpatialOperations():
     def run_all_baseline_models(self):
         ECIO = ExtremePrecIndexFunctions()
 
-
         for city in self.cities.keys():
             for gcm in self.GCMs:
                 for rcp in ['rcp45', 'rcp85']:
@@ -563,10 +562,17 @@ class SpatialOperations():
         if gcm in ['Obs', 'obs', 'observation']:
             nc_filename = city + '_' + param + '_Obs_GEVparams.nc'
             varname = 'precip'
+            gev_dir = self.GEVparamDir
+        if gcm in ['era5', 'Era5', 'ERA5']:
+            nc_filename = city + '_' + param + '_Obs_GEVparams.nc'
+            varname = '__xarray_dataarray_variable__'
+            gev_dir = self.GEVparamDirEra5
         else:
-            nc_filename = city + '_' + param + '_' + rcp+gcm + '_ModGEVparams.nc'
+            nc_filename = city + '_' + param + '_' + rcp + gcm + '_ModGEVparams.nc'
             varname = self.paramToGCMParamDict[param]
-        with xarray.open_dataset(os.path.join(self.GEVparamDir, nc_filename)) as dataset:
+            gev_dir = self.GEVparamDir
+
+        with xarray.open_dataset(os.path.join(gev_dir, nc_filename)) as dataset:
             data_params = dataset[varname]
 
         return data_params
@@ -645,7 +651,7 @@ class SpatialOperations():
         # cdcdf_obsf['param'] = np.linspace(0,max_val, 1000)
         return cdf_obs
 
-    def generatePolyfitParamsR2(self, city, gcm, param, rcp):
+    def generatePolyfitParamsR2(self, city, gcm, param, rcp, obs):
 
         def polyfitfunct(X, Y, threshold):
             deg = 3
@@ -704,7 +710,7 @@ class SpatialOperations():
             # polyparams = np.array( [a, b, c])
             return np.append(params ,r_squared)
 
-        obs_inv_cdf = self.getInverseCDF(city, 'obs', param, rcp)
+        obs_inv_cdf = self.getInverseCDF(city, obs, param, rcp)
         mod_inv_cdf = self.getInverseCDF(city, gcm, param, rcp)
         obs_data = self.getObsData(city, param)
         mod_data = self.getModelBaselineData( city, param, rcp, gcm)
@@ -729,23 +735,23 @@ class SpatialOperations():
 
         return polyParams
 
-    def run_all_generatePolyfitParamsR2(self):
-        # self.cities ={
-        #     'Banjarmasin': [-3.26,  -3.37, 114.54 , 114.65],
-        #     'Pangkalpinang': [-2.07,  -2.16, 106.06, 106.18],
-        #     # 'Ternate1' : [0.921, 0.747, 127.288, 127.395],
-        #     # 'Ternate2' : [0.482, 0.431, 127.38, 127.441],
-        #     # 'Ternate3' : [1.354, 1.279, 126.356, 126.417],
-        #     # 'Ternate4' : [0.99, 0.955, 126.126, 126.163],
-        #     # # 'Ternate': [1.36, 0.43, 126.12, 127.44],
-        #     # 'Bandar Lampung': [-5.33, -5.53, 105.18, 105.35],
-        #     # 'Mataram':[-8.55,  -8.62 ,116.06, 116.16],
-        #     # 'Samarinda': [0.71, 0.3, 117.04, 117.31],
-        #     # 'Pekanbaru': [0.61, 0.41, 101.36, 101.52],
-        #     # 'Gorontalo': [0.6, 0.5, 123.0, 123.08],
-        #     # 'Cirebon': [-6.68, -6.8, 108.51, 108.59],
-        #     # 'Kupang': [-10.12, -10.22, 123.54, 123.68]
-        # }
+    def run_all_generatePolyfitParamsR2(self, ECIO, obs='era5'):
+        self.cities = {
+            'Banjarmasin': [-3.26,  -3.37, 114.54 , 114.65],
+            # 'Pangkalpinang': [-2.07,  -2.16, 106.06, 106.18],
+            # 'Ternate1' : [0.921, 0.747, 127.288, 127.395],
+            # 'Ternate2' : [0.482, 0.431, 127.38, 127.441],
+            # 'Ternate3' : [1.354, 1.279, 126.356, 126.417],
+            # 'Ternate4' : [0.99, 0.955, 126.126, 126.163],
+            # # 'Ternate': [1.36, 0.43, 126.12, 127.44],
+            # 'Bandar Lampung': [-5.33, -5.53, 105.18, 105.35],
+            # 'Mataram':[-8.55,  -8.62 ,116.06, 116.16],
+            # 'Samarinda': [0.71, 0.3, 117.04, 117.31],
+            # 'Pekanbaru': [0.61, 0.41, 101.36, 101.52],
+            # 'Gorontalo': [0.6, 0.5, 123.0, 123.08],
+            # 'Cirebon': [-6.68, -6.8, 108.51, 108.59],
+            # 'Kupang': [-10.12, -10.22, 123.54, 123.68]
+        }
 
         for city in self.cities.keys():
             for gcm in self.GCMs:
@@ -753,14 +759,20 @@ class SpatialOperations():
                     print(city, gcm, rcp)
                     for index_f in [ECIO.CDD, ECIO.CWD, ECIO.Prec95p, ECIO.Prec99p, ECIO.rx1day, ECIO.rx5day, ECIO.r20mm]:
                         print(index_f.__name__)
-                        gevModParams = self.generatePolyfitParamsR2(city=city, gcm=gcm, rcp=rcp, param=index_f.__name__)
-                        nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_PolynomParamsR2.nc'
+                        gevModParams = self.generatePolyfitParamsR2(city=city, gcm=gcm, rcp=rcp, param=index_f.__name__, obs=obs)
+                        if obs == 'era5':
+                            nc_filename = city + '_' + index_f.__name__ + '_' + rcp + gcm + '_PolynomParamsR2Era5.nc'
+                        else:
+                            nc_filename = city + '_' + index_f.__name__ + '_' + rcp + gcm + '_PolynomParamsR2.nc'
                         gevModParams.to_netcdf(nc_filename)
+
                         copyfile(nc_filename, os.path.join(self.polynomParamsDir, nc_filename))
 
-    def getPolynomParamsR2(self, city, gcm, rcp, param):
-
-        nc_filename = city + '_' + param + '_' + rcp+gcm + '_PolynomParamsR2.nc'
+    def getPolynomParamsR2(self, city, gcm, rcp, param, obs):
+        if obs in ['era5', 'Era5', 'ERA5']:
+            nc_filename = city + '_' + param + '_' + rcp+gcm + '_PolynomParamsR2Era5.nc'
+        else:
+            nc_filename = city + '_' + param + '_' + rcp+gcm + '_PolynomParamsR2.nc'
         varname = '__xarray_dataarray_variable__'
         with xarray.open_dataset(os.path.join(self.polynomParamsDir, nc_filename)) as dataset:
             data_params = dataset[varname]
@@ -768,7 +780,7 @@ class SpatialOperations():
         return data_params
 
 
-    def ExtremeDownscalingRun(self, city, gcm, rcp, param, data2correct):
+    def ExtremeDownscalingRun(self, city, gcm, rcp, param, data2correct, obs):
         # ECIO = ExtremePrecIndexFunctions()
         # So = SpatialOperations()
         # city = 'Banjarmasin'
@@ -777,15 +789,13 @@ class SpatialOperations():
         # rcp = 'rcp45'
         # data2correct = 'rcp' #### baseline rcp45 or rcp
 
-
-        polyparams = self.getPolynomParamsR2( city, gcm, rcp, param)
-
+        polyparams = self.getPolynomParamsR2(city, gcm, rcp, param, obs)
 
         if data2correct == 'baseline':
             cropped_ds = self.getModelBaselineData(city, param, rcp, gcm)
         else:
             modelparam = self.paramToGCMParamDict[param]
-            with xarray.open_mfdataset(glob( os.path.join(self.GCMdir, gcm) + '/'+ modelparam+'_yr_'+gcm+'_'+rcp +'*.nc')[0]) as f:
+            with xarray.open_mfdataset(glob(os.path.join(self.GCMdir, gcm) + '/'+ modelparam+'_yr_'+gcm+'_'+rcp +'*.nc')[0]) as f:
                 future_crop = f.isel(time=slice(16,16+50))
             index_data = future_crop[modelparam]
 
@@ -833,23 +843,23 @@ class SpatialOperations():
         return correctedData
 
 
-    def run_all_ExtremeDownscalingRun(self):
-        # self.cities ={
-        #     'Banjarmasin': [-3.26,  -3.37, 114.54 , 114.65],
-        #     'Pangkalpinang': [-2.07,  -2.16, 106.06, 106.18],
-        #     # 'Ternate1' : [0.921, 0.747, 127.288, 127.395],
-        #     # 'Ternate2' : [0.482, 0.431, 127.38, 127.441],
-        #     # 'Ternate3' : [1.354, 1.279, 126.356, 126.417],
-        #     # 'Ternate4' : [0.99, 0.955, 126.126, 126.163],
-        #     # # 'Ternate': [1.36, 0.43, 126.12, 127.44],
-        #     # 'Bandar Lampung': [-5.33, -5.53, 105.18, 105.35],
-        #     # 'Mataram':[-8.55,  -8.62 ,116.06, 116.16],
-        #     # 'Samarinda': [0.71, 0.3, 117.04, 117.31],
-        #     # 'Pekanbaru': [0.61, 0.41, 101.36, 101.52],
-        #     # 'Gorontalo': [0.6, 0.5, 123.0, 123.08],
-        #     # 'Cirebon': [-6.68, -6.8, 108.51, 108.59],
-        #     # 'Kupang': [-10.12, -10.22, 123.54, 123.68]
-        # }
+    def run_all_ExtremeDownscalingRun(self, ECIO, obs='era5'):
+        self.cities ={
+            'Banjarmasin': [-3.26,  -3.37, 114.54 , 114.65],
+            # 'Pangkalpinang': [-2.07,  -2.16, 106.06, 106.18],
+            # 'Ternate1' : [0.921, 0.747, 127.288, 127.395],
+            # 'Ternate2' : [0.482, 0.431, 127.38, 127.441],
+            # 'Ternate3' : [1.354, 1.279, 126.356, 126.417],
+            # 'Ternate4' : [0.99, 0.955, 126.126, 126.163],
+            # # 'Ternate': [1.36, 0.43, 126.12, 127.44],
+            # 'Bandar Lampung': [-5.33, -5.53, 105.18, 105.35],
+            # 'Mataram':[-8.55,  -8.62 ,116.06, 116.16],
+            # 'Samarinda': [0.71, 0.3, 117.04, 117.31],
+            # 'Pekanbaru': [0.61, 0.41, 101.36, 101.52],
+            # 'Gorontalo': [0.6, 0.5, 123.0, 123.08],
+            # 'Cirebon': [-6.68, -6.8, 108.51, 108.59],
+            # 'Kupang': [-10.12, -10.22, 123.54, 123.68]
+        }
 
         for city in self.cities.keys():
             for gcm in self.GCMs:
@@ -860,20 +870,31 @@ class SpatialOperations():
 
                             print(data2correct, index_f.__name__)
 
-                            correctedData = self.ExtremeDownscalingRun(city=city, gcm=gcm, rcp=rcp, param=index_f.__name__, data2correct=data2correct)
+                            correctedData = self.ExtremeDownscalingRun(city=city, gcm=gcm, rcp=rcp, param=index_f.__name__, data2correct=data2correct, obs=obs)
                             if data2correct == 'baseline':
-
-                                nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_baseline_corrected.nc'
+                                if obs == 'era5':
+                                    nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_baseline_corrected_era5.nc'
+                                else:
+                                    nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_baseline_corrected.nc'
                             else:
-                                nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_'+ rcp+'_corrected.nc'
+                                if obs == 'era5':
+                                    nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_'+ rcp+'_corrected_era5.nc'
+                                else:
+                                    nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_'+ rcp+'_corrected.nc'
                             correctedData.to_netcdf(nc_filename)
                             copyfile(nc_filename, os.path.join(self.correctedDataDir, nc_filename))
 
-    def getCorrectedData(self,  city, gcm, rcp, param, data2correct):
+    def getCorrectedData(self, city, gcm, rcp, param, data2correct, obs):
         if data2correct == 'baseline':
-            nc_filename = city + '_' + param + '_' + rcp+gcm + '_baseline_corrected.nc'
+            if obs == 'era5':
+                nc_filename = city + '_' + param + '_' + rcp + gcm + '_baseline_corrected_era5.nc'
+            else:
+                nc_filename = city + '_' + param + '_' + rcp + gcm + '_baseline_corrected.nc'
         else:
-            nc_filename = city + '_' + param + '_' + rcp+gcm + '_'+ rcp+'_corrected.nc'
+            if obs == 'era5':
+                nc_filename = city + '_' + param + '_' + rcp + gcm + '_' + rcp + '_corrected_era5.nc'
+            else:
+                nc_filename = city + '_' + param + '_' + rcp + gcm + '_' + rcp + '_corrected.nc'
 
         varname = '__xarray_dataarray_variable__'
         with xarray.open_dataset(os.path.join(self.correctedDataDir, nc_filename)) as dataset:
@@ -882,13 +903,14 @@ class SpatialOperations():
         return data_params
         ##### plot the result (?)
 
-    def generateQualityControl(self, city, gcm, rcp, param, data2correct):
-        correctedData = self.getCorrectedData(city, gcm, rcp, param, data2correct)
+    def generateQualityControl(self, city, gcm, rcp, param, data2correct, obs):
+        correctedData = self.getCorrectedData(city, gcm, rcp, param, data2correct, obs)
+
         def calculate_std(S):
             S_no_nan = S[~np.isnan(S)]
             return S_no_nan.std()
 
-        def neighbours_of(i, j,  len_i, len_j):
+        def neighbours_of(i, j, len_i, len_j):
             """Positions of neighbours (includes out of bounds but excludes cell itself)."""
             ui = i +1 if i + 1 < len_i else  i
             li = i - 1 if i - 1 >= 0 else  i
@@ -993,23 +1015,23 @@ class SpatialOperations():
         )
         return QC
 
-    def run_all_QualityControl(self):
-        # self.cities ={
-        #     'Banjarmasin': [-3.26,  -3.37, 114.54 , 114.65],
-        #     'Pangkalpinang': [-2.07,  -2.16, 106.06, 106.18],
-        #     # 'Ternate1' : [0.921, 0.747, 127.288, 127.395],
-        #     # 'Ternate2' : [0.482, 0.431, 127.38, 127.441],
-        #     # 'Ternate3' : [1.354, 1.279, 126.356, 126.417],
-        #     # 'Ternate4' : [0.99, 0.955, 126.126, 126.163],
-        #     # # 'Ternate': [1.36, 0.43, 126.12, 127.44],
-        #     # 'Bandar Lampung': [-5.33, -5.53, 105.18, 105.35],
-        #     # 'Mataram':[-8.55,  -8.62 ,116.06, 116.16],
-        #     # 'Samarinda': [0.71, 0.3, 117.04, 117.31],
-        #     # 'Pekanbaru': [0.61, 0.41, 101.36, 101.52],
-        #     # 'Gorontalo': [0.6, 0.5, 123.0, 123.08],
-        #     # 'Cirebon': [-6.68, -6.8, 108.51, 108.59],
-        #     # 'Kupang': [-10.12, -10.22, 123.54, 123.68]
-        # }
+    def run_all_QualityControl(self, ECIO, obs='era5'):
+        self.cities ={
+            'Banjarmasin': [-3.26,  -3.37, 114.54 , 114.65],
+            # 'Pangkalpinang': [-2.07,  -2.16, 106.06, 106.18],
+            # 'Ternate1' : [0.921, 0.747, 127.288, 127.395],
+            # 'Ternate2' : [0.482, 0.431, 127.38, 127.441],
+            # 'Ternate3' : [1.354, 1.279, 126.356, 126.417],
+            # 'Ternate4' : [0.99, 0.955, 126.126, 126.163],
+            # # 'Ternate': [1.36, 0.43, 126.12, 127.44],
+            # 'Bandar Lampung': [-5.33, -5.53, 105.18, 105.35],
+            # 'Mataram':[-8.55,  -8.62 ,116.06, 116.16],
+            # 'Samarinda': [0.71, 0.3, 117.04, 117.31],
+            # 'Pekanbaru': [0.61, 0.41, 101.36, 101.52],
+            # 'Gorontalo': [0.6, 0.5, 123.0, 123.08],
+            # 'Cirebon': [-6.68, -6.8, 108.51, 108.59],
+            # 'Kupang': [-10.12, -10.22, 123.54, 123.68]
+        }
 
         for city in self.cities.keys():
             for gcm in self.GCMs:
@@ -1020,21 +1042,29 @@ class SpatialOperations():
 
                             print(data2correct, index_f.__name__)
 
-                            QC = self.generateQualityControl(city=city, gcm=gcm, rcp=rcp, param=index_f.__name__, data2correct=data2correct)
+                            QC = self.generateQualityControl(city=city, gcm=gcm, rcp=rcp, param=index_f.__name__, data2correct=data2correct, obs=obs)
                             if data2correct == 'baseline':
 
-                                nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_baseline_QC.nc'
+                                nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_baseline_QC'
                             else:
-                                nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_'+ rcp+'_QC.nc'
+                                nc_filename = city + '_' + index_f.__name__ + '_' + rcp+gcm + '_'+ rcp+'_QC'
+                            if obs == 'era5':
+                                nc_filename = nc_filename + 'era5.nc'
+                            else:
+                                nc_filename = nc_filename + '.nc'
                             QC.to_netcdf(nc_filename)
                             copyfile(nc_filename, os.path.join(self.QCDir, nc_filename))
 
-    def getQCData(self, city, gcm, rcp, param, data2correct):
+    def getQCData(self, city, gcm, rcp, param, data2correct, obs='era5'):
         if data2correct == 'baseline':
-            nc_filename = city + '_' + param + '_' + rcp+gcm + '_baseline_QC.nc'
-        else:
-            nc_filename = city + '_' + param + '_' + rcp+gcm + '_'+ rcp+'_QC.nc'
 
+            nc_filename = city + '_' + param + '_' + rcp+gcm + '_baseline_QC'
+        else:
+            nc_filename = city + '_' + param + '_' + rcp+gcm + '_'+ rcp+'_QC'
+        if obs == 'era5':
+            nc_filename = nc_filename + 'era5.nc'
+        else:
+            nc_filename = nc_filename + '.nc'
         varname = '__xarray_dataarray_variable__'
         with xarray.open_dataset(os.path.join(self.QCDir, nc_filename)) as dataset:
             data_params = dataset[varname]
