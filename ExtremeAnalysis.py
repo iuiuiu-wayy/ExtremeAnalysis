@@ -701,14 +701,19 @@ class SpatialOperations():
                 # Curve fitting function
                 return a * x**3 + b * x**2 + c * x  # d=0 is implied
 
-            params = curve_fit(fit_func, Xnew, Ynew)
-            [a, b, c] = params[0]
+            try:
+                  
+                params = curve_fit(fit_func, Xnew, Ynew)
+                [a, b, c] = params[0]
 
-            # params = np.polyfit(Xnew, Ynew, deg=deg)
-            params = np.array([a,b,c,0])
-            z = np.poly1d(params)
-            # z = np.poly1d(params)
-            r_squared = 1 - (  sum((Ynew-z(Xnew))**2) / ( sum( (Ynew-Ynew.mean())**2) )  )
+                # params = np.polyfit(Xnew, Ynew, deg=deg)
+                params = np.array([a,b,c,0])
+                z = np.poly1d(params)
+                # z = np.poly1d(params)
+                r_squared = 1 - (  sum((Ynew-z(Xnew))**2) / ( sum( (Ynew-Ynew.mean())**2) )  )
+            except:
+                params = np.array([np.nan, np.nan, np.nan, np.nan])
+                r_squared = np.nan
             # print(r_squared)
             # polyparams = np.array( [a, b, c])
             return np.append(params ,r_squared)
