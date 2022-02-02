@@ -429,12 +429,15 @@ class SpatialOperations():
                         combined.to_netcdf(nc_filename)
                         copyfile(nc_filename, os.path.join(self.BaselineGCMdir, nc_filename))
 
-    def getObsData(self, city, param):
+    def getObsData(self, city, param, obs='era5'):
         nc_filename = city + '_' + param + '.nc'
+        if obs == 'era5':
+            with xarray.open_dataset(os.path.join(self.CityETCCDIEra5, nc_filename)) as f:
+                obs_data = f['__xarray_dataarray_variable__']
         # copyfile(nc_filename, os.path.join(self.GDRIVELOC, nc_filename))
-
-        with xarray.open_dataset(os.path.join(self.GDRIVELOC, nc_filename)) as dataset:
-            obs_data = dataset['precip']
+        else:
+            with xarray.open_dataset(os.path.join(self.GDRIVELOC, nc_filename)) as dataset:
+                obs_data = dataset['precip']
         return obs_data
 
     def getModelBaselineData(self, city, param, rcp, gcm):
@@ -712,7 +715,7 @@ class SpatialOperations():
 
         obs_inv_cdf = self.getInverseCDF(city, obs, param, rcp)
         mod_inv_cdf = self.getInverseCDF(city, gcm, param, rcp)
-        obs_data = self.getObsData(city, param)
+        obs_data = self.getObsData(city, param, obs=obs)
         mod_data = self.getModelBaselineData( city, param, rcp, gcm)
         tho = obs_data.max().values
         thm = mod_data.max().values
