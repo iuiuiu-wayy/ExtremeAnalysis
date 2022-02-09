@@ -549,7 +549,7 @@ class SpatialOperations():
 
 
 
-    def run_all_calculateGEVModelParam(self):
+    def run_all_calculateGEVModelParam(self, ECIO):
         for city in self.cities.keys():
             for gcm in self.GCMs:
                 for rcp in ['rcp45', 'rcp85']:
