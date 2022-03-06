@@ -158,7 +158,8 @@ class SpatialOperations():
             'Pekanbaru': [0.61, 0.41, 101.36, 101.52],
             'Gorontalo': [0.6, 0.5, 123.0, 123.08],
             'Cirebon': [-6.68, -6.8, 108.51, 108.59],
-            'Kupang': [-10.12, -10.22, 123.54, 123.68]
+            'Kupang': [-10.12, -10.22, 123.54, 123.68],
+            'Kabupaten Bandung' : [-6.81, -7.32, 107.25, 108.94 ]
         }
         self.era5data = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/ERA5'
         self.GEVparamDir = '/content/drive/MyDrive/Bahan Pelatihan/DataIklimEkstrim/GEVparams'
