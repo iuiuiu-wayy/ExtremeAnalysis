@@ -7,3 +7,4 @@ xarray
 pandas
 numpy
 scipy
+cftime
